@@ -1,3 +1,5 @@
+import "./globals.css"
+
 export const metadata = {
   title: 'AI Chat App',
   description: 'A modular AI chat web application',

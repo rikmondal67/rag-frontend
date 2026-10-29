@@ -1,35 +1,32 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Paper, CircularProgress } from '@mui/material';
 import useChatStore from '../store/useChatStore';
 
 export default function ChatFeed() {
   const { messages, currentChatId, setMessages } = useChatStore();
   const [isFetching, setIsFetching] = useState(false);
 
-  
   useEffect(() => {
     const fetchMessages = async () => {
-      
       if (!currentChatId) {
         setMessages([]);
         return;
       }
 
       setIsFetching(true);
-      
+
       try {
         const res = await fetch(`/api/messages?chatId=${currentChatId}`);
         const data = await res.json();
-        
+
         if (data.success) {
           setMessages(data.messages || []);
         } else {
           setMessages([]);
         }
       } catch (error) {
-        console.error("Failed to load messages:", error);
+        console.error('Failed to load messages:', error);
         setMessages([]);
       } finally {
         setIsFetching(false);
@@ -37,55 +34,48 @@ export default function ChatFeed() {
     };
 
     fetchMessages();
-  }, [currentChatId, setMessages]); 
+  }, [currentChatId, setMessages]);
+
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: 3,
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* Show a spinner while the database is fetching old messages */}
+    <div className="flex flex-1 flex-col overflow-y-auto p-6">
       {isFetching ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
-          <CircularProgress />
-        </Box>
-      ) : (!messages || messages.length === 0) ? (
-        <Typography variant="body1" color="textSecondary" sx={{ mt: 5, textAlign: 'center' }}>
+        <div className="mt-5 flex justify-center">
+          <div
+            className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#f7690a]"
+            role="status"
+            aria-label="Loading messages"
+          />
+        </div>
+      ) : !messages || messages.length === 0 ? (
+        <p className="mt-5 text-center text-sm text-gray-500">
           No messages yet. Send a message to start!
-        </Typography>
+        </p>
       ) : (
         messages.map((msg, index) => {
           const isUser = msg.sender === 'user' || msg.role === 'user';
-          
+
           return (
-            <Box
-              key={index}
-              sx={{
-                display: 'flex',
-                justifyContent: isUser ? 'flex-end' : 'flex-start',
-                mb: 2,
-              }}
+            <div
+              key={msg._id || msg.id || index}
+              className={`mb-4 flex ${
+                isUser ? 'justify-end' : 'justify-start'
+              }`}
             >
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 2,
-                  maxWidth: '70%',
-                  backgroundColor: isUser ? '#1976d2' : '#ffffff',
-                  color: isUser ? '#ffffff' : '#000000',
-                  borderRadius: 2,
-                }}
+              <div
+                className={`max-w-[70%] whitespace-pre-wrap rounded-2xl px-4 py-3 shadow-sm ${
+                  isUser
+                    ? 'rounded-br-sm bg-[#f7690a] text-white'
+                    : 'rounded-bl-sm border border-gray-200 bg-white text-gray-900'
+                }`}
               >
-                <Typography variant="body1">{msg.content || msg.text}</Typography>
-              </Paper>
-            </Box>
+                <p className="text-sm leading-6">
+                  {msg.content || msg.text}
+                </p>
+              </div>
+            </div>
           );
         })
       )}
-    </Box>
+    </div>
   );
 }
